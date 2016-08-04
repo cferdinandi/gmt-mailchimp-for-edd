@@ -82,7 +82,7 @@
 					),
 					array(
 						'key' => 'mailchimp_edd_discount',
-						'value' => $purchase['cart_details'][0]['discount'],
+						'value' => $purchase['user_info']['discount'],
 						'compare' => '='
 					)
 				)
