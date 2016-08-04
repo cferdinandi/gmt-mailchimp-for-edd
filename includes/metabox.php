@@ -55,7 +55,7 @@
 				<select id="mailchimp_edd_discout" name="mailchimp_edd[discount]">
 					<option value="" <?php selected( '', $saved_discount ); ?>></option>
 					<?php foreach ( $discounts as $key => $discount ) : ?>
-						<option value="<?php echo esc_attr( $discount->ID ); ?>" <?php selected( $discount->ID, $saved_download ); ?>><?php echo esc_html( $discount->post_title ); ?></option>
+						<option value="<?php echo esc_attr( $discount->ID ); ?>" <?php selected( $discount->ID, $saved_discount ); ?>><?php echo esc_html( $discount->post_title ); ?></option>
 					<?php endforeach; ?>
 				</select>
 				<br><br>
