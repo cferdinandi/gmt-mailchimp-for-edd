@@ -44,21 +44,17 @@
 		// If subscriber already exists, update profile
 		if ( array_key_exists( 'status', $data ) && $data['status'] === 400 && $data['title'] === 'Member Exists' ) {
 
-			$url .= '/' . md5( $subscriber );
+			$url .= '/' . md5( $subscriber['email'] );
 			$params = array(
 				'headers' => array(
 					'Authorization' => 'Basic ' . base64_encode( 'mailchimp' . ':' . $api_key )
 				),
 				'method' => 'PUT',
 				'body' => json_encode(array(
-					'merge_fields' => array(
-						'FNAME' => $subscriber['first_name'],
-						'LNAME' => $subscriber['last_name'],
-					),
 					'interests' => $interests,
 				)),
 			);
-			$request = wp_remote_post( $url, $params );
+			$request = wp_remote_request( $url, $params );
 			$response = wp_remote_retrieve_body( $request );
 
 			// If still pending, return "new" status again
