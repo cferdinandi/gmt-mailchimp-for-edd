@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-mailchimp-for-edd/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-mailchimp-for-edd/
  * Description: Adds deep MailChimp integration to Easy Digital Downloads.
- * Version: 2.0.0
+ * Version: 2.0.1
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: MIT
