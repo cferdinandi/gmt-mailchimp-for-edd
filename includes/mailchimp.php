@@ -88,5 +88,46 @@
 			$mailchimp = mailchimp_edd_add_to_mailchimp( $details, $purchase['user_info'] );
 		}
 
+		set_transient( 'edd_mc_test_3', 'It worked!', 1 * HOUR_IN_SECONDS );
+
 	}
-	add_action( 'edd_complete_purchase', 'mailchimp_edd_on_complete_purchase', 10, 2 );
+	add_action( 'wp_async_edd_complete_purchase', 'mailchimp_edd_on_complete_purchase', 10, 2 );
+
+
+	/**
+	 * Asynchronously run the MailChimp API functions
+	 */
+	class MailChimp_EDD_Async_Task extends WP_Async_Task {
+
+		protected $action = 'edd_complete_purchase';
+
+		/**
+		 * Prepare data for the asynchronous request
+		 *
+		 * @throws Exception If for any reason the request should not happen
+		 *
+		 * @param array $data An array of data sent to the hook
+		 *
+		 * @return array
+		 */
+		protected function prepare_data( $data ) {
+			return array( 'payment_id' => $data[0] );
+		}
+
+		/**
+		 * Run the async task action
+		 */
+		protected function run_action() {
+			do_action( "wp_async_$this->action", $_POST['payment_id'] );
+		}
+
+	}
+
+
+	/**
+	 * Initialize our extended class
+	 */
+	function init_mc_edd_async() {
+	    new MailChimp_EDD_Async_Task();
+	}
+	add_action( 'plugins_loaded', 'init_mc_edd_async' );
