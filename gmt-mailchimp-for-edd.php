@@ -4,24 +4,37 @@
  * Plugin Name: GMT MailChimp for EDD
  * Plugin URI: https://github.com/cferdinandi/gmt-mailchimp-for-edd/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-mailchimp-for-edd/
- * Description: Extends MailChimp integration to Easy Digital Downloads
- * Version: 1.1.0
+ * Description: Adds deep MailChimp integration to Easy Digital Downloads.
+ * Version: 2.1.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: MIT
  */
 
 
-// Add new metabox
-require_once( plugin_dir_path( __FILE__ ) . 'includes/metabox.php' );
+// Define constants
+define( 'GMT_MAILCHIMP_FOR_EDD_VERSION', '2.1.0' );
 
-// MailChimp integration
+
+// Includes
+require_once( plugin_dir_path( __FILE__ ) . 'includes/wp-async-task.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'includes/settings.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'includes/metabox.php' );
 require_once( plugin_dir_path( __FILE__ ) . 'includes/mailchimp.php' );
 
 
-// Check that GMT MailChimp plugin is installed
-function mailchimp_edd_admin_notice() {
-	if ( function_exists( 'mailchimp_add_custom_post_type' ) ) return;
-	printf( '<div class="%1$s"><p>%2$s</p></div>', 'notice notice-error', __( 'GMT MailChimp for EDD requires the <a href="https://github.com/cferdinandi/gmt-mailchimp">GMT MailChimp plugin</a>. Please install it immediately.', 'sample-text-domain' ) );
+/**
+ * Check the plugin version and make updates if needed
+ */
+function gmt_mailchimp_for_edd_check_version() {
+
+	// Get plugin data
+	$old_version = get_site_option( 'gmt_mailchimp_for_edd_version' );
+
+	// Update plugin to current version number
+	if ( empty( $old_version ) || version_compare( $old_version, GMT_MAILCHIMP_FOR_EDD_VERSION, '<' ) ) {
+		update_site_option( 'gmt_mailchimp_version', GMT_MAILCHIMP_FOR_EDD_VERSION );
+	}
+
 }
-add_action( 'admin_notices', 'mailchimp_edd_admin_notice' );
+add_action( 'plugins_loaded', 'gmt_mailchimp_for_edd_check_version' );

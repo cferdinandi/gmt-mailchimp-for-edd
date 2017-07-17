@@ -4,9 +4,93 @@
 	 * Create the metabox
 	 */
 	function mailchimp_edd_create_metabox() {
-		add_meta_box( 'mailchimp_edd_metabox', 'Easy Digital Downloads Integration', 'mailchimp_edd_render_metabox', 'gmt-mailchimp', 'normal', 'low' );
+		add_meta_box( 'mailchimp_edd_metabox', 'MailChimp', 'mailchimp_edd_render_metabox', 'download', 'normal', 'low' );
 	}
 	add_action( 'add_meta_boxes', 'mailchimp_edd_create_metabox' );
+
+
+
+	/**
+	 * Create the metabox default values
+	 */
+	function mailchimp_edd_metabox_defaults() {
+		$list_id = edd_get_option( 'gmt_mailchimp_edd_list_id', false );
+		return array(
+			'signup' => 'off',
+			'list_id' => $list_id,
+			'disable_optin' => 'off',
+			'interests' => array(),
+		);
+	}
+
+
+
+	/**
+	 * Get data from the MailChimp API
+	 * @param  string $group The group ID
+	 * @return array         Data from the MailChimp API
+	 */
+	function mailchimp_edd_metabox_get_mailchimp_data( $list_id, $group = null ) {
+
+		// Get the API key
+		$api_key = edd_get_option( 'gmt_mailchimp_edd_api_key', false );
+
+		if ( empty( $api_key ) || empty( $list_id ) ) return;
+
+		// Create API call
+		$shards = explode( '-', $api_key );
+		$url = 'https://' . $shards[1] . '.api.mailchimp.com/3.0/lists/' . $list_id . '/interest-categories' . ( empty( $group ) ? '' : '/' . $group . '/interests?count=99' );
+		$params = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . base64_encode( 'mailchimp' . ':' . $api_key )
+			),
+		);
+
+		// Get data from  MailChimp
+		$request = wp_remote_get( $url, $params );
+		$response = wp_remote_retrieve_body( $request );
+		$data = json_decode( $response, true );
+
+		// If request fails, bail
+		if ( empty( $group ) ) {
+			if ( !array_key_exists( 'categories', $data ) || !is_array( $data['categories'] ) || empty( $data['categories'] ) ) return array();
+		} else {
+			if ( !array_key_exists( 'interests', $data ) || !is_array( $data['interests'] ) || empty( $data['interests'] ) ) return array();
+		}
+
+		return $data;
+
+	}
+
+
+
+	/**
+	 * Render interest groups
+	 * @param  array $details  Saved data
+	 */
+	function mailchimp_edd_metabox_render_interest_groups( $details ) {
+
+		// Variables
+		$categories = mailchimp_edd_metabox_get_mailchimp_data( $details['list_id'] );
+		$html = '';
+
+		foreach ( $categories['categories'] as $category ) {
+			$html .= '<h4>' . esc_html( $category['title'] ) . '</h4>';
+			$groups = mailchimp_edd_metabox_get_mailchimp_data( $details['list_id'], $category['id'] );
+
+			foreach ( $groups['interests'] as $group ) {
+				$html .=
+					'<label>' .
+						'<input type="checkbox" name="mailchimp_edd[interest_groups][' . esc_attr( $group['id'] ) . ']" value="' . esc_attr( $group['id'] ) . '" ' . ( array_key_exists( $group['id'], $details['interests'] ) ? 'checked="checked"' : '' ) . '>' .
+						esc_html( $group['name'] ) .
+					'</label>' .
+					'<br>';
+			}
+
+		}
+
+		echo $html;
+	}
 
 
 
@@ -17,55 +101,37 @@
 
 		// Variables
 		global $post;
-		$saved_download = get_post_meta( $post->ID, 'mailchimp_edd_download', true );
-		$saved_discount = get_post_meta( $post->ID, 'mailchimp_edd_discount', true );
-		$saved_optin = get_post_meta( $post->ID, 'mailchimp_edd_double_opt_in', true );
-
-		$downloads = get_posts(
-			array(
-				'posts_per_page' => -1,
-				'post_type'      => 'download',
-				'post_status'    => 'publish',
-			)
-		);
-
-		$discounts = get_posts(
-			array(
-				'posts_per_page' => -1,
-				'post_type'      => 'edd_discount',
-				'post_status'    => 'active',
-			)
-		);
+		$saved = get_post_meta( $post->ID, 'mailchimp_edd_details', true );
+		$defaults = mailchimp_edd_metabox_defaults();
+		$details = wp_parse_args( $saved, $defaults );
 
 		?>
 
 			<fieldset>
-				<p><strong>Will add buyer to MailChimp list selected above if <em>any</em> of the options below are met.</strong></p>
-
-				<label for="mailchimp_edd_download"><?php _e( 'Download:', 'mailchimp_edd' ); ?></label><br>
-				<select id="mailchimp_edd_download" name="mailchimp_edd[download]">
-					<option value="" <?php selected( '', $saved_download ); ?>></option>
-					<?php foreach ( $downloads as $key => $download ) : ?>
-						<option value="<?php echo esc_attr( $download->ID ); ?>" <?php selected( $download->ID, $saved_download ); ?>><?php echo esc_html( $download->post_title ); ?></option>
-					<?php endforeach; ?>
-				</select>
-				<br><br>
-
-				<label for="mailchimp_edd_discout"><?php _e( 'Discount:', 'mailchimp_edd' ); ?></label><br>
-				<select id="mailchimp_edd_discout" name="mailchimp_edd[discount]">
-					<option value="" <?php selected( '', $saved_discount ); ?>></option>
-					<?php foreach ( $discounts as $key => $discount ) : ?>
-						<?php $discount_code = get_post_meta( $discount->ID, '_edd_discount_code', true ); ?>
-						<option value="<?php echo esc_attr( $discount_code ); ?>" <?php selected( $discount_code, $saved_discount ); ?>><?php echo esc_html( $discount_code ); ?></option>
-					<?php endforeach; ?>
-				</select>
-				<br><br>
+				<p><?php _e( 'Add anyone who buys this download to your list with the following details.', 'mailchimp_edd' ); ?></p>
 
 				<label>
-					<input type="checkbox" name="mailchimp_edd[double_opt_in]" value="on" <?php checked( 'on', $saved_optin ); ?>>
+					<input type="checkbox" name="mailchimp_edd[signup]" value="on" <?php checked( 'on', $details['signup'] ); ?>>
+					<?php _e( 'Subscribe buyers to your list', 'mailchimp_edd' ); ?>
+				</label>
+				<br><br>
+
+				<div>
+					<label for="mailchimp_list_id"><?php _e( 'List ID', 'mailchimp' ); ?></label>
+					<input type="text" class="large-text" id="mailchimp_list_id" name="mailchimp_edd[list_id]" value="<?php echo esc_attr( $details['list_id'] ); ?>">
+				</div>
+				<br>
+
+				<label>
+					<input type="checkbox" name="mailchimp_edd[disable_optin]" value="on" <?php checked( 'on', $details['disable_optin'] ); ?>>
 					<?php _e( 'Disable double opt-in', 'mailchimp_edd' ); ?>
 				</label>
-				<br>
+				<br><br>
+
+				<h3><?php _e( 'Interest Groups', 'mailchimp' ); ?></h3>
+
+				<?php mailchimp_edd_metabox_render_interest_groups( $details ); ?>
+
 			</fieldset>
 
 		<?php
@@ -101,14 +167,25 @@
 			return $post->ID;
 		}
 
-		// Update data in database
-		update_post_meta( $post->ID, 'mailchimp_edd_download', wp_filter_post_kses( $_POST['mailchimp_edd']['download'] ) );
-		update_post_meta( $post->ID, 'mailchimp_edd_discount', wp_filter_post_kses( $_POST['mailchimp_edd']['discount'] ) );
-		if ( isset( $_POST['mailchimp_edd']['double_opt_in'] ) ) {
-			update_post_meta( $post->ID, 'mailchimp_edd_double_opt_in', 'on' );
-		} else {
-			update_post_meta( $post->ID, 'mailchimp_edd_double_opt_in', 'off' );
+		// Sanitize all data
+		$sanitized = array();
+		$interests = array();
+		foreach ( $_POST['mailchimp_edd'] as $key => $detail ) {
+			if ( $key === 'interest_groups' ) {
+				foreach ($detail as $group) {
+					$interests[$group] = 'on';
+				}
+				continue;
+			}
+			if ( $key === 'disable_optin' ) {
+				$sanitized[$key] = 'on';
+			}
+			$sanitized[$key] = wp_filter_post_kses( $detail );
 		}
+		$sanitized['interests'] = $interests;
+
+		// Update data in database
+		update_post_meta( $post->ID, 'mailchimp_edd_details', $sanitized );
 
 	}
 	add_action( 'save_post', 'mailchimp_edd_save_metabox', 1, 2 );
