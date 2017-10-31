@@ -26,7 +26,7 @@
 				'Authorization' => 'Basic ' . base64_encode( 'mailchimp' . ':' . $api_key )
 			),
 			'body' => json_encode(array(
-				'status' => ( $details['disable_optin'] === 'on' ? 'subscribed' : 'pending' ),
+				'status' => ( array_key_exists('double_optin', $details) && $details['double_optin'] === 'on' ? 'pending' : 'subscribed' ),
 				'email_address' => $subscriber['email'],
 				'merge_fields' => array(
 					'FNAME' => $subscriber['first_name'],

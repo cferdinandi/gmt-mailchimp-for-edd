@@ -18,7 +18,7 @@
 		return array(
 			'signup' => 'off',
 			'list_id' => $list_id,
-			'disable_optin' => 'off',
+			'double_optin' => 'off',
 			'interests' => array(),
 		);
 	}
@@ -122,9 +122,9 @@
 				</div>
 				<br>
 
-				<label>
-					<input type="checkbox" name="mailchimp_edd[disable_optin]" value="on" <?php checked( 'on', $details['disable_optin'] ); ?>>
-					<?php _e( 'Disable double opt-in', 'mailchimp_edd' ); ?>
+				<label for="mailchimp_double_optin">
+					<input type="checkbox" id="mailchimp_double_optin" name="mailchimp_edd[double_optin]" value="on" <?php checked( 'on', $details['double_optin'] ); ?>>
+					<?php _e( 'Enable double opt-in', 'mailchimp_edd' ); ?>
 				</label>
 				<br><br>
 
@@ -177,8 +177,9 @@
 				}
 				continue;
 			}
-			if ( $key === 'disable_optin' ) {
+			if ( $key === 'double_optin' ) {
 				$sanitized[$key] = 'on';
+				continue;
 			}
 			$sanitized[$key] = wp_filter_post_kses( $detail );
 		}
