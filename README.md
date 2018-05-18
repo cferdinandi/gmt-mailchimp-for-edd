@@ -1,4 +1,7 @@
-# GMT MailChimp for EDD
+# [DEPRECATED] GMT MailChimp for EDD
+
+*__Deprecation Notice:__ This plugin has been deprecated and will no longer be updated or supported.*
+
 Automatically add people who purchase specific downloads to your MailChimp list. You can also optionally add them to interest groups.
 
 [Download GMT MailChimp for EDD](https://github.com/cferdinandi/gmt-mailchimp-for-edd/archive/master.zip)
