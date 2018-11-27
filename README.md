@@ -1,6 +1,4 @@
-# [DEPRECATED] GMT MailChimp for EDD
-
-*__Deprecation Notice:__ This plugin has been deprecated and will no longer be updated or supported.*
+# GMT MailChimp for EDD
 
 Automatically add people who purchase specific downloads to your MailChimp list. You can also optionally add them to interest groups.
 
@@ -27,7 +25,7 @@ In your download, under `MailChimp`:
 
 1. Check `Subscribe buyers to your list`.
 2. Add a `List ID`.
-3. If you don't want them to receive the double opt-in email, check `Disable double opt-in`.
+3. If you want subscribers to receive the double opt-in email, check `Enable double opt-in`.
 4. Check off any desired interest groups.
 5. Click `Publish` or `Update`.
 
