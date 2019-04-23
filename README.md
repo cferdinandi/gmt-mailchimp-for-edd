@@ -32,7 +32,9 @@ In your download, under `MailChimp`:
 
 ## Updating subscriptions on refunds and subscription cancellations
 
-When someone gets a refund or unsubscribes for a recurring payment, they will be removed from any of the groups. You can subscribe them to new groups *or* keep them in their existing ones by checking any desired groups under `On Cancel or Refund`.
+When someone gets a refund or unsubscribes for a recurring payment, they will be removed from any of the default groups. They will *not* be removed from your list altogether.
+
+You can subscribe them to new groups *or* keep them in their existing ones by checking any desired groups under `On Cancel or Refund`.
 
 
 
