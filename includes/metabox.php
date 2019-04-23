@@ -129,13 +129,20 @@
 				</label>
 				<br><br>
 
-				<h3><?php _e( 'Interest Groups', 'mailchimp' ); ?></h3>
-
-				<?php mailchimp_edd_metabox_render_interest_groups( $details ); ?>
-
-				<h3><?php _e( 'On Cancel or Refund', 'mailchimp' ); ?></h3>
-
-				<?php mailchimp_edd_metabox_render_interest_groups( $details, true ); ?>
+				<table>
+					<tbody>
+						<tr>
+							<td>
+								<h3><?php _e( 'Interest Groups', 'mailchimp' ); ?></h3>
+								<?php mailchimp_edd_metabox_render_interest_groups( $details ); ?>
+							</td>
+							<td>
+								<h3><?php _e( 'On Cancel or Refund', 'mailchimp' ); ?></h3>
+								<?php mailchimp_edd_metabox_render_interest_groups( $details, true ); ?>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 
 			</fieldset>
 
