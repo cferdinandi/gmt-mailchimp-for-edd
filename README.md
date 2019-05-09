@@ -30,11 +30,10 @@ In your download, under `MailChimp`:
 5. Click `Publish` or `Update`.
 
 
-## Updating subscriptions on refunds and subscription cancellations
 
-When someone gets a refund or unsubscribes for a recurring payment, they will be removed from any of the default groups. They will *not* be removed from your list altogether.
+## How to Contribute
 
-You can subscribe them to new groups *or* keep them in their existing ones by checking any desired groups under `On Cancel or Refund`.
+Please read the [Contribution Guidelines](CONTRIBUTING.md).
 
 
 

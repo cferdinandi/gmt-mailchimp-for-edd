@@ -20,7 +20,6 @@
 			'list_id' => $list_id,
 			'double_optin' => 'off',
 			'interests' => array(),
-			'on_cancel' => array(),
 		);
 	}
 
@@ -69,7 +68,7 @@
 	 * Render interest groups
 	 * @param  array $details  Saved data
 	 */
-	function mailchimp_edd_metabox_render_interest_groups( $details, $cancel = false ) {
+	function mailchimp_edd_metabox_render_interest_groups( $details ) {
 
 		// Variables
 		$categories = mailchimp_edd_metabox_get_mailchimp_data( $details['list_id'] );
@@ -82,7 +81,7 @@
 			foreach ( $groups['interests'] as $group ) {
 				$html .=
 					'<label>' .
-						'<input type="checkbox" name="mailchimp_edd[' . ($cancel ? 'on_cancel' : 'interest_groups') . '][' . esc_attr( $group['id'] ) . ']" value="' . esc_attr( $group['id'] ) . '" ' . ( array_key_exists( $group['id'], $details[($cancel ? 'on_cancel' : 'interests')] ) ? 'checked="checked"' : '' ) . '>' .
+						'<input type="checkbox" name="mailchimp_edd[interest_groups][' . esc_attr( $group['id'] ) . ']" value="' . esc_attr( $group['id'] ) . '" ' . ( array_key_exists( $group['id'], $details['interests'] ) ? 'checked="checked"' : '' ) . '>' .
 						esc_html( $group['name'] ) .
 					'</label>' .
 					'<br>';
@@ -129,20 +128,9 @@
 				</label>
 				<br><br>
 
-				<table>
-					<tbody>
-						<tr>
-							<td>
-								<h3><?php _e( 'Interest Groups', 'mailchimp' ); ?></h3>
-								<?php mailchimp_edd_metabox_render_interest_groups( $details ); ?>
-							</td>
-							<td>
-								<h3><?php _e( 'On Cancel or Refund', 'mailchimp' ); ?></h3>
-								<?php mailchimp_edd_metabox_render_interest_groups( $details, true ); ?>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<h3><?php _e( 'Interest Groups', 'mailchimp' ); ?></h3>
+
+				<?php mailchimp_edd_metabox_render_interest_groups( $details ); ?>
 
 			</fieldset>
 
@@ -182,17 +170,10 @@
 		// Sanitize all data
 		$sanitized = array();
 		$interests = array();
-		$on_cancel = array();
 		foreach ( $_POST['mailchimp_edd'] as $key => $detail ) {
 			if ( $key === 'interest_groups' ) {
 				foreach ($detail as $group) {
 					$interests[$group] = 'on';
-				}
-				continue;
-			}
-			if ( $key === 'on_cancel' ) {
-				foreach ($detail as $group) {
-					$on_cancel[$group] = 'on';
 				}
 				continue;
 			}
@@ -203,7 +184,6 @@
 			$sanitized[$key] = wp_filter_post_kses( $detail );
 		}
 		$sanitized['interests'] = $interests;
-		$sanitized['on_cancel'] = $on_cancel;
 
 		// Update data in database
 		update_post_meta( $post->ID, 'mailchimp_edd_details', $sanitized );
