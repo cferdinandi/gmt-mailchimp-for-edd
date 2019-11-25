@@ -31,6 +31,16 @@ In your download, under `MailChimp`:
 
 
 
+## Discount Code Specific Interest Groups
+
+You also can add customers to an interest group if they use a specific discount code.
+
+1. In the Dashboard, go to `Downloads` > `Settings` > `Extensions` > `Mailchimp`.
+2. Under `Discount Codes`, add your code/interest group pair using the `CODE:GROUP_ID` format. For multiple code/group pairs, separate each group with a comma.
+3. Click `Save Changes`.
+
+
+
 ## How to Contribute
 
 Please read the [Contribution Guidelines](CONTRIBUTING.md).

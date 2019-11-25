@@ -71,6 +71,55 @@
 
 	}
 
+	/**
+	 * Get discount codes that should be added to interest groups
+	 * @return array The discount codes and their matching interest groups
+	 */
+	function mailchimp_edd_get_discount_interest_groups() {
+
+		// Variables
+		$settings = edd_get_option( 'gmt_mailchimp_discount_codes', false );
+		$settings_arr = explode(',', $settings);
+		$codes = array();
+
+		// Create codes array
+		foreach ($settings_arr as $value) {
+			$code = explode(':', trim($value));
+			$codes[strtolower($code[0])] = $code[1];
+		}
+
+		return $codes;
+
+	}
+
+	function mailchimp_edd_get_discount_groups_for_user($user_codes) {
+
+		// Variables
+		$discounts = mailchimp_edd_get_discount_interest_groups();
+		$user_codes_arr = explode(',', $user_codes);
+		$groups = array();
+
+		// Get each group for the user
+		foreach ($user_codes_arr as $value) {
+			$val = trim(strtolower($value));
+			if (array_key_exists($val, $discounts)) {
+				$groups[$discounts[$val]] = 'on';
+			}
+		}
+
+		return $groups;
+
+	}
+
+	function mailchimp_edd_merge_groups($groups, $details) {
+		if (empty($details['interests'])) {
+			$details['interests'] = $groups;
+		} else {
+			$details['interests'] = array_merge($details['interests'], $groups);
+		}
+		return $details;
+	}
+
 
 	/**
 	 * Add buyer to MailChimp after purchase is complete
@@ -81,10 +130,14 @@
 		// Get purchase data
 		$purchase = edd_get_payment_meta( $payment_id );
 
+		// Discount interest groups
+		$discount_groups = mailchimp_edd_get_discount_groups_for_user($purchase['user_info']['discount']);
+
 		// For each download, add subscriber to the list
 		foreach( $purchase['downloads'] as $key => $download ) {
 			$details = get_post_meta( $download['id'], 'mailchimp_edd_details', true );
 			if ( $details['signup'] === 'off' || empty( $details['list_id'] ) || empty( $purchase['user_info']['email'] ) ) continue;
+			$details = mailchimp_edd_merge_groups($discount_groups, $details);
 			$mailchimp = mailchimp_edd_add_to_mailchimp( $details, $purchase['user_info'] );
 		}
 

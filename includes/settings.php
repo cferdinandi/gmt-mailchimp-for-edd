@@ -33,6 +33,13 @@
 				'type'    => 'text',
 				'size'    => 'regular',
 			),
+			array(
+				'id'      => 'gmt_mailchimp_discount_codes',
+				'name'    => __( 'Discount Codes', 'mailchimp_edd' ),
+				'desc'    => __( 'Group to add a customer to if they use a specific discount code. Use a <code>CODE:GROUP_ID</code> format. Use a comma for multiple items.', 'mailchimp_edd' ),
+				'type'    => 'textarea',
+				'size'    => 'regular',
+			)
 		);
 		if ( version_compare( EDD_VERSION, 2.5, '>=' ) ) {
 			$mailchimp_settings = array( 'gmt_mailchimp_edd' => $mailchimp_settings );
