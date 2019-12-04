@@ -20,17 +20,52 @@
 			'list_id' => $list_id,
 			'double_optin' => 'off',
 			'interests' => array(),
+			'tags' => array(),
 		);
+	}
+
+
+	/**
+	 * Get tag data from the MailChimp API
+	 * @param  string $list_id The list ID
+	 * @return array           The tag data
+	 */
+	function mailchimp_edd_metabox_get_mailchimp_tags( $list_id ) {
+
+		// Get the API key
+		$api_key = edd_get_option( 'gmt_mailchimp_edd_api_key', false );
+
+		if ( empty( $api_key ) || empty( $list_id ) ) return;
+
+		// Create API call
+		$shards = explode( '-', $api_key );
+		$url = 'https://' . $shards[1] . '.api.mailchimp.com/3.0/lists/' . $list_id . '/segments?type=static&count=1000';
+		$params = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . base64_encode( 'mailchimp' . ':' . $api_key )
+			),
+		);
+
+		// Get data from  MailChimp
+		$request = wp_remote_get( $url, $params );
+		$response = wp_remote_retrieve_body( $request );
+		$data = json_decode( $response, true );
+
+		// If request fails, bail
+		if ( !is_array($data) || !array_key_exists( 'segments', $data ) || empty($data['segments']) ) return array();
+
+		return $data;
+
 	}
 
 
 
 	/**
-	 * Get data from the MailChimp API
+	 * Get interest group data from the MailChimp API
 	 * @param  string $group The group ID
 	 * @return array         Data from the MailChimp API
 	 */
-	function mailchimp_edd_metabox_get_mailchimp_data( $list_id, $group = null ) {
+	function mailchimp_edd_metabox_get_mailchimp_groups( $list_id, $group = null ) {
 
 		// Get the API key
 		$api_key = edd_get_option( 'gmt_mailchimp_edd_api_key', false );
@@ -71,12 +106,12 @@
 	function mailchimp_edd_metabox_render_interest_groups( $details ) {
 
 		// Variables
-		$categories = mailchimp_edd_metabox_get_mailchimp_data( $details['list_id'] );
+		$categories = mailchimp_edd_metabox_get_mailchimp_groups( $details['list_id'] );
 		$html = '';
 
 		foreach ( $categories['categories'] as $category ) {
 			$html .= '<h4>' . esc_html( $category['title'] ) . '</h4>';
-			$groups = mailchimp_edd_metabox_get_mailchimp_data( $details['list_id'], $category['id'] );
+			$groups = mailchimp_edd_metabox_get_mailchimp_groups( $details['list_id'], $category['id'] );
 
 			foreach ( $groups['interests'] as $group ) {
 				$html .=
@@ -90,6 +125,31 @@
 		}
 
 		echo $html;
+	}
+
+
+
+	/**
+	 * Render tags
+	 * @param  array $details  Saved data
+	 */
+	function mailchimp_edd_metabox_render_tags( $details ) {
+
+		// Variables
+		$tags = mailchimp_edd_metabox_get_mailchimp_tags( $details['list_id'] );
+		$html = '';
+
+		foreach ($tags['segments'] as $tag) {
+			$html .=
+				'<label>' .
+					'<input type="checkbox" name="mailchimp_edd[tags][' . esc_attr( $tag['id'] ) . ']" value="' . esc_attr( $tag['id'] ) . '" ' . ( array_key_exists( $tag['id'], $details['tags'] ) ? 'checked="checked"' : '' ) . '>' .
+					esc_html( $tag['name'] ) .
+				'</label>' .
+				'<br>';
+		}
+
+		echo $html;
+
 	}
 
 
@@ -132,6 +192,12 @@
 
 				<?php mailchimp_edd_metabox_render_interest_groups( $details ); ?>
 
+				<br><br>
+
+				<h3><?php _e( 'Tags', 'mailchimp' ); ?></h3>
+
+				<?php mailchimp_edd_metabox_render_tags( $details ); ?>
+
 			</fieldset>
 
 		<?php
@@ -170,12 +236,18 @@
 		// Sanitize all data
 		$sanitized = array();
 		$interests = array();
+		$tags = array();
 		foreach ( $_POST['mailchimp_edd'] as $key => $detail ) {
 			if ( $key === 'interest_groups' ) {
 				foreach ($detail as $group) {
 					$interests[$group] = 'on';
 				}
 				continue;
+			}
+			if ( $key === 'tags' ) {
+				foreach ($detail as $tag) {
+					$tags[$tag] = 'on';
+				}
 			}
 			if ( $key === 'double_optin' ) {
 				$sanitized[$key] = 'on';
@@ -184,6 +256,7 @@
 			$sanitized[$key] = wp_filter_post_kses( $detail );
 		}
 		$sanitized['interests'] = $interests;
+		$sanitized['tags'] = $tags;
 
 		// Update data in database
 		update_post_meta( $post->ID, 'mailchimp_edd_details', $sanitized );
