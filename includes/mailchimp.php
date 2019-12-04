@@ -66,7 +66,7 @@
 	function mailchimp_edd_get_discount_interest_groups() {
 
 		// Variables
-		$settings = edd_get_option( 'gmt_mailchimp_discount_codes', false );
+		$settings = edd_get_option( 'gmt_mailchimp_discount_code_groups', false );
 		$settings_arr = explode(',', $settings);
 		$codes = array();
 
@@ -80,15 +80,63 @@
 
 	}
 
-	function mailchimp_edd_get_discount_tags_for_user($user_codes) {
+	/**
+	 * Get discount codes that should be added to tags
+	 * @return array The discount codes and their matching tags
+	 */
+	function mailchimp_edd_get_discount_tags() {
+
+		// Variables
+		$settings = edd_get_option( 'gmt_mailchimp_discount_code_tags', false );
+		$settings_arr = explode(',', $settings);
+		$codes = array();
+
+		// Create codes array
+		foreach ($settings_arr as $value) {
+			$code = explode(':', trim($value));
+			$codes[strtolower($code[0])] = $code[1];
+		}
+
+		return $codes;
+
+	}
+
+	/**
+	 * Get the interest groups that apply to a user based on their discount codes
+	 * @param  array $user_codes The discount codes that were used
+	 * @return array             The groups they should be added to
+	 */
+	function mailchimp_edd_get_discount_groups_for_user($user_codes) {
 
 		// Variables
 		$discounts = mailchimp_edd_get_discount_interest_groups();
-		$user_codes_arr = explode(',', $user_codes);
+		$groups = array();
+
+		// Get each group for the user
+		foreach ($user_codes as $value) {
+			$val = trim(strtolower($value));
+			if (array_key_exists($val, $discounts)) {
+				$groups[$discounts[$val]] = 'on';
+			}
+		}
+
+		return $groups;
+
+	}
+
+	/**
+	 * Get the tags that apply to a user based on their discount codes
+	 * @param  array $user_codes The discount codes that were used
+	 * @return array             The tags they should be added to
+	 */
+	function mailchimp_edd_get_discount_tags_for_user($user_codes) {
+
+		// Variables
+		$discounts = mailchimp_edd_get_discount_tags();
 		$tags = array();
 
 		// Get each group for the user
-		foreach ($user_codes_arr as $value) {
+		foreach ($user_codes as $value) {
 			$val = trim(strtolower($value));
 			if (array_key_exists($val, $discounts)) {
 				$tags[$discounts[$val]] = 'on';
@@ -99,14 +147,31 @@
 
 	}
 
+	/**
+	 * Merge discount code interest groups and tags into product-specific ones
+	 * @param  array $groups  Discount code interest groups
+	 * @param  array $tags    Discount code tags
+	 * @param  array $details Subscriber details
+	 * @return array          Merged details
+	 */
+	function mailchimp_edd_merge_groups_and_tags($groups, $tags, $details) {
 
-	function mailchimp_edd_merge_tags($tags, $details) {
+		// Merge interest groups
+		if (empty($details['interests'])) {
+			$details['interests'] = $groups;
+		} else {
+			$details['interests'] = array_merge($details['interests'], $groups);
+		}
+
+		// Merge tags
 		if (empty($details['tags'])) {
 			$details['tags'] = $tags;
 		} else {
 			$details['tags'] = array_merge($details['tags'], $tags);
 		}
+
 		return $details;
+
 	}
 
 
@@ -120,14 +185,16 @@
 		$purchase = edd_get_payment_meta( $payment_id );
 
 		// Discount interest groups
-		$discount_tags = mailchimp_edd_get_discount_tags_for_user($purchase['user_info']['discount']);
+		$user_codes = explode(',', $purchase['user_info']['discount']);
+		$discount_groups = mailchimp_edd_get_discount_groups_for_user($user_codes);
+		$discount_tags = mailchimp_edd_get_discount_tags_for_user($user_codes);
 
 		// For each download, add subscriber to the list
 		foreach( $purchase['downloads'] as $key => $download ) {
 			$details = get_post_meta( $download['id'], 'mailchimp_edd_details', true );
 			if ( $details['signup'] === 'off' || empty( $details['list_id'] ) || empty( $purchase['user_info']['email'] ) ) continue;
 			$details['tags'] = $discount_tags;
-			$details = mailchimp_edd_merge_tags($discount_tags, $details);
+			$details = mailchimp_edd_merge_groups_and_tags($discount_groups, $discount_tags, $details);
 			$mailchimp = mailchimp_edd_add_to_mailchimp( $details, $purchase['user_info'] );
 		}
 

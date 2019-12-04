@@ -34,8 +34,15 @@
 				'size'    => 'regular',
 			),
 			array(
-				'id'      => 'gmt_mailchimp_discount_codes',
-				'name'    => __( 'Discount Codes', 'mailchimp_edd' ),
+				'id'      => 'gmt_mailchimp_discount_code_groups',
+				'name'    => __( 'Discount Code Groups', 'mailchimp_edd' ),
+				'desc'    => __( 'Groups to add a customer to if they use a specific discount code. Use a <code>CODE:GROUP_ID</code> format. Use a comma for multiple items.', 'mailchimp_edd' ),
+				'type'    => 'textarea',
+				'size'    => 'regular',
+			),
+			array(
+				'id'      => 'gmt_mailchimp_discount_code_tags',
+				'name'    => __( 'Discount Code Tags', 'mailchimp_edd' ),
 				'desc'    => __( 'Tags to add a customer to if they use a specific discount code. Use a <code>CODE:TAG_ID</code> format. Use a comma for multiple items.', 'mailchimp_edd' ),
 				'type'    => 'textarea',
 				'size'    => 'regular',
