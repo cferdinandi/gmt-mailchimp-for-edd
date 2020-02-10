@@ -8,12 +8,10 @@
 	function mailchimp_edd_add_to_mailchimp( $details, $subscriber ) {
 
 		// Create interest groups array
-		if ( empty( $details['interests'] ) ) {
-			$interests = new stdClass();
-		} else {
-			$interests = array();
+		$interests = new stdClass();
+		if ( !empty( $details['interests'] ) ) {
 			foreach ( $details['interests'] as $key => $group ) {
-				$interests[$key] = true;
+				$interests->$key = true;
 			}
 		}
 
