@@ -190,7 +190,7 @@
 		// For each download, add subscriber to the list
 		foreach( $purchase['downloads'] as $key => $download ) {
 			$details = get_post_meta( $download['id'], 'mailchimp_edd_details', true );
-			if ( $details['signup'] === 'off' || empty( $details['list_id'] ) || empty( $purchase['user_info']['email'] ) ) continue;
+			if ( empty( $details['signup'] ) || $details['signup'] === 'off' || empty( $details['list_id'] ) || empty( $purchase['user_info']['email'] ) ) continue;
 			$details['tags'] = $discount_tags;
 			$details = mailchimp_edd_merge_groups_and_tags($discount_groups, $discount_tags, $details);
 			$mailchimp = mailchimp_edd_add_to_mailchimp( $details, $purchase['user_info'] );
